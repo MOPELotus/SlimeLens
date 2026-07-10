@@ -59,7 +59,8 @@ jobs:
       - name: Build and install Leaves API locally
         working-directory: .deps/leaves
         run: |
-          bash ./gradlew applyPaperPatches :leaves-api:jar --no-daemon
+          bash ./gradlew applyPaperPatches --no-daemon
+          bash ./gradlew :leaves-api:jar --no-daemon
           mvn --batch-mode --no-transfer-progress install:install-file \
             -Dfile=leaves-api/build/libs/leaves-api-26.2.local-SNAPSHOT.jar \
             -DgroupId=org.leavesmc.leaves \
