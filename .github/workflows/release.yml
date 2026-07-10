@@ -33,7 +33,7 @@ jobs:
       - name: Build and install Slimefun API locally
         working-directory: .deps/slimefun
         run: |
-          ./gradlew shadowJar --no-daemon -PprojectVersion=9879f76-Beta-sxau26.2
+          bash ./gradlew shadowJar --no-daemon -PprojectVersion=9879f76-Beta-sxau26.2
           mvn --batch-mode --no-transfer-progress install:install-file \
             -Dfile=build/libs/Slimefun-9879f76-Beta-sxau26.2.jar \
             -DgroupId=com.github.slimefun \
@@ -59,7 +59,7 @@ jobs:
       - name: Build and install Leaves API locally
         working-directory: .deps/leaves
         run: |
-          ./gradlew :leaves-api:jar --no-daemon
+          bash ./gradlew :leaves-api:jar --no-daemon
           mvn --batch-mode --no-transfer-progress install:install-file \
             -Dfile=leaves-api/build/libs/leaves-api-26.2.local-SNAPSHOT.jar \
             -DgroupId=org.leavesmc.leaves \
