@@ -1,0 +1,20 @@
+name: SlimeLens
+version: ${project.version}
+main: cn.sxau.slimelens.SlimeLensPlugin
+api-version: '1.21'
+description: JEI-style Slimefun recipe and usage browser.
+author: SXAU
+depend:
+  - Slimefun
+commands:
+  slimelens:
+    description: Open the SlimeLens recipe browser.
+    aliases: [lens, slens]
+    usage: /slimelens [search|recipes|uses|reload]
+permissions:
+  slimelens.use:
+    description: Allows opening SlimeLens.
+    default: true
+  slimelens.admin:
+    description: Allows rebuilding the SlimeLens index.
+    default: op

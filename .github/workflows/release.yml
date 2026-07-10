@@ -1,0 +1,103 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out SlimeLens
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21 for Slimefun
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Check out pinned Slimefun API source
+        uses: actions/checkout@v4
+        with:
+          repository: SlimefunGuguProject/Slimefun4
+          ref: 9879f76a9e974e0ab8ceca963f92b6224724466d
+          path: .deps/slimefun
+
+      - name: Build and install Slimefun API locally
+        working-directory: .deps/slimefun
+        run: |
+          ./gradlew shadowJar --no-daemon -PprojectVersion=9879f76-Beta-sxau26.2
+          mvn --batch-mode --no-transfer-progress install:install-file \
+            -Dfile=build/libs/Slimefun-9879f76-Beta-sxau26.2.jar \
+            -DgroupId=com.github.slimefun \
+            -DartifactId=Slimefun \
+            -Dversion=9879f76-Beta-sxau26.2 \
+            -Dpackaging=jar \
+            -DgeneratePom=true
+
+      - name: Set up Java 25 for Leaves and SlimeLens
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Check out SXAU Leaves API source
+        uses: actions/checkout@v4
+        with:
+          repository: MOPELotus/Leaves
+          ref: master
+          path: .deps/leaves
+
+      - name: Build and install Leaves API locally
+        working-directory: .deps/leaves
+        run: |
+          ./gradlew :leaves-api:jar --no-daemon
+          mvn --batch-mode --no-transfer-progress install:install-file \
+            -Dfile=leaves-api/build/libs/leaves-api-26.2.local-SNAPSHOT.jar \
+            -DgroupId=org.leavesmc.leaves \
+            -DartifactId=leaves-api \
+            -Dversion=26.2.local-SNAPSHOT \
+            -Dpackaging=jar \
+            -DgeneratePom=true
+
+      - name: Resolve release version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=1.0.0-SNAPSHOT" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build SlimeLens
+        run: mvn --batch-mode --no-transfer-progress -Pgithub-actions -Drevision=${{ steps.version.outputs.value }} verify
+
+      - name: Prepare distributable jar
+        shell: bash
+        run: |
+          mkdir -p release
+          cp target/SlimeLens.jar release/SlimeLens-${{ steps.version.outputs.value }}.jar
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SlimeLens-${{ steps.version.outputs.value }}
+          path: release/SlimeLens-${{ steps.version.outputs.value }}.jar
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release/SlimeLens-${{ steps.version.outputs.value }}.jar
