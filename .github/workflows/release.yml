@@ -63,8 +63,10 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           bash ./gradlew applyPaperPatches --no-daemon
           bash ./gradlew :leaves-api:jar --no-daemon
+          LEAVES_API_JAR="$(find leaves-api/build/libs -maxdepth 1 -type f -name 'leaves-api-*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' -print -quit)"
+          test -n "$LEAVES_API_JAR"
           mvn --batch-mode --no-transfer-progress install:install-file \
-            -Dfile=leaves-api/build/libs/leaves-api-26.2.local-SNAPSHOT.jar \
+            -Dfile="$LEAVES_API_JAR" \
             -DgroupId=org.leavesmc.leaves \
             -DartifactId=leaves-api \
             -Dversion=26.2.local-SNAPSHOT \
